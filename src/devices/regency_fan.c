@@ -83,7 +83,6 @@ static int regency_fan_decode(r_device *decoder, bitbuffer_t *bitbuffer)
     }
 
     bitbuffer_invert(bitbuffer);
-    bitbuffer_print(bitbuffer);
 
     for (int index = 0; index < bitbuffer->num_rows; index++) {
         num_bits = bitbuffer->bits_per_row[index];
@@ -184,7 +183,7 @@ static char *output_fields[] = {
 };
 
 r_device regency_fan = {
-    .name        = "Regency Fan Remote (-f 303.96M)",
+    .name        = "Regency Fan Remote (-f 303.75M to 303.96M)",
     .modulation  = OOK_PULSE_PPM,
     .short_width = 365,  // Narrow gap is really a 1
     .long_width  = 880,  // Wide gap is really a 0
