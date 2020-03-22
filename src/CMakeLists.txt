@@ -122,6 +122,7 @@ add_library(r_433 STATIC
     devices/proove.c
     devices/quhwa.c
     devices/radiohead_ask.c
+    devices/regency_fan.c
     devices/rftech.c
     devices/rubicson.c
     devices/rubicson_48659.c
