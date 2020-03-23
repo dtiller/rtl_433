@@ -10,19 +10,55 @@
  */
 
 /**
- The device uses OOK_PULSE_PCM_RZ encoding.
- The packet starts with either a narrow (500 uS) start pulse or a long (1500 uS) pulse.
- - 0 is defined as a 1500 uS gap followed by a  500 uS pulse.
- - 1 is defined as a 1000 uS gap followed by a 1000 uS pulse.
- - 2 is defined as a  500 uS gap followed by a 1500 uS pulse.
+ The device uses OOK_PULSE_PPM encoding.
+ The packet starts with 576 uS start pulse.
+ - 0 is defined as a 375 uS gap followed by a 970 uS pulse.
+ - 1 is defined as a 880 uS gap followed by a 450 uS pulse.
 
- Transmissions consist of a '1' length packet of 20 'trits' (trinary digits)
- followed by a '3' length packet of 20 trits. These two packets are repeated
- some number of times.
- The trits represent a rolling code that changes on each keypress, a fixed
- 16 trit device ID,  3 id trits (key pressed), and a 1 trit button id.
- All of the data is obfuscated and a 1 length and a 3 length packet are
- required to successfully decode a transmission.
+ Transmissions consist of the start bit followed by bursts of 20 bits.
+ These packets ar repeated up to 11 times.
+ 
+ As written, the PPM code always interpets a narrow gap as a 1 and a
+ long gap as a 0, however the actual data onver the air is inverted,
+ i.e. a short gap is a 1 and a long gap is a 0. In addition, the data
+ is 5 nibbles long and is represented in Little-Endian format. In the
+ code I invert the bits and also reflect the bytes. Reflection introduces
+ an additional nibble at bit offsets 16-19, so the data is expressed a 3
+ complete bytes.
+
+ The examples below are _after_ inversion and reflection (MSB's are on 
+ the left).
+
+ Packet layout
+ Bit number
+ 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23
+  CHANNEL  |  COMMAND  |            VALUE       | 0  0  0  0| 4 bit checksum
+
+ CHANNEL is determined by the bit switches in the battery compartment. All
+ switches in the 'off' position result in a channel of 15, implying that the
+ switches pull the address lines down when in the on position.
+ 
+ COMMAND is one of the following:
+
+ CMD_STOP	 0x01
+	value: (0xc0, unused).
+
+ CMD_FAN_SPEED	 0x02
+	value: 0x01-0x07. On my remote, the speeds are shown as 8 - value.
+
+ CMD_LIGHT_INT	 0x04
+	value: 0x00-0xc3. The value is the intensity percentage.
+		0x00 id off, 0xc3 is 99% (full).
+
+ CMD_LIGHT_DELAY 0x05
+	value: 0x00 is 'off', 0x01 is on.
+
+ CMD_FAN_DIR	 0x06
+	value: 0x07 is one way, 0x83 is the other.
+
+ The CHECKSUM is calculated by adding the nibbles of the first two bytes
+ and ANDing the result with 0x0f. 
+
  */
 
 #include <stdlib.h>
@@ -81,8 +117,9 @@ static int regency_fan_decode(r_device *decoder, bitbuffer_t *bitbuffer)
 
         return 0;
     }
-
+bitbuffer_print(bitbuffer);
     bitbuffer_invert(bitbuffer);
+bitbuffer_print(bitbuffer);
 
     for (int index = 0; index < bitbuffer->num_rows; index++) {
         num_bits = bitbuffer->bits_per_row[index];
@@ -173,12 +210,11 @@ static int regency_fan_decode(r_device *decoder, bitbuffer_t *bitbuffer)
  */
 static char *output_fields[] = {
     "model",
-    "device_id",
-    "device_id_hex",
-    "counter",
-    "counter_hex",
-    "id_bits",
-    "button_pressed",
+    "type",
+    "channel",
+    "command",
+    "value",
+    "mic",
     NULL,
 };
 
