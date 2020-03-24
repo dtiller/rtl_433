@@ -19,8 +19,8 @@
  These packets ar repeated up to 11 times.
  
  As written, the PPM code always interpets a narrow gap as a 1 and a
- long gap as a 0, however the actual data onver the air is inverted,
- i.e. a short gap is a 1 and a long gap is a 0. In addition, the data
+ long gap as a 0, however the actual data over the air is inverted,
+ i.e. a short gap is a 0 and a long gap is a 1. In addition, the data
  is 5 nibbles long and is represented in Little-Endian format. In the
  code I invert the bits and also reflect the bytes. Reflection introduces
  an additional nibble at bit offsets 16-19, so the data is expressed a 3
