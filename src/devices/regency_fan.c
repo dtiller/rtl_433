@@ -117,9 +117,8 @@ static int regency_fan_decode(r_device *decoder, bitbuffer_t *bitbuffer)
 
         return 0;
     }
-bitbuffer_print(bitbuffer);
+
     bitbuffer_invert(bitbuffer);
-bitbuffer_print(bitbuffer);
 
     for (int index = 0; index < bitbuffer->num_rows; index++) {
         num_bits = bitbuffer->bits_per_row[index];
