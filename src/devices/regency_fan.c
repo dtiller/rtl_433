@@ -64,8 +64,9 @@
 #include <stdlib.h>
 #include "decoder.h"
 
-#define NUM_BITS        20
+#define NUM_BITS        21
 #define NUM_BYTES       3
+#define BYTE_START      1
 
 #define CMD_CHAN_BYTE   0
 #define VALUE_BYTE      1
@@ -132,7 +133,7 @@ static int regency_fan_decode(r_device *decoder, bitbuffer_t *bitbuffer)
         }
 
         uint8_t bytes[NUM_BYTES];
-        bitbuffer_extract_bytes(bitbuffer, index, 0, bytes, NUM_BITS);
+        bitbuffer_extract_bytes(bitbuffer, index, BYTE_START, bytes, NUM_BITS);
         reflect_bytes(bytes, NUM_BYTES);
 
         // Calculate nibble sum and compare
@@ -219,10 +220,11 @@ static char *output_fields[] = {
 
 r_device regency_fan = {
     .name        = "Regency Fan Remote (-f 303.75M to 303.96M)",
-    .modulation  = OOK_PULSE_PPM,
-    .short_width = 365,  // Narrow gap is really a 1
-    .long_width  = 880,  // Wide gap is really a 0
-    .reset_limit = 8000, // this is short enough so we only get 1 row.
+    .modulation  = OOK_PULSE_PWM,
+    .short_width = 580,
+    .long_width  = 976,
+    .gap_limit   = 8000,
+    .reset_limit = 14000,
     .decode_fn   = &regency_fan_decode,
     .disabled    = 1, // disabled and hidden, use 0 if there is a MIC, 1 otherwise
     .fields      = output_fields,
